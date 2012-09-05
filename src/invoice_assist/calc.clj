@@ -24,7 +24,7 @@
           
 (defn calc-optimal [total invoice-list]
   (cond (empty? invoice-list) nil
-        (= 0 total) (list (min invoice-list))
+        (= 0.0 (double total)) (list (apply min invoice-list))
         :else (let [cur (first invoice-list)]
                 (select-opt total (cons cur (calc-optimal (safe-sub total cur)
                                                           (next invoice-list)))
@@ -34,3 +34,10 @@
 (defn- test [total invoice-list]
   (let [opt (calc-optimal total invoice-list)]
     (cons total (cons (apply + opt) opt))))
+
+
+;; (test 0 '(1 2 3 4 5))
+;; (test 10.0 '(1 1 1 1 1 1 1 1 1.2 1.5))
+;; (test 330.0 '(97 88 64 17.5 14.5 18.5 23.7 21.5 1.2 9.0))
+;; (test 330.0 '(24.5 18.5 97 88 64.1 17.5  23.7 21.5 1.2 10.0))
+;; (test 330.0 '(159 200.3 188.6 129.7))
