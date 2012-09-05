@@ -1,4 +1,4 @@
-(ns 'invoice-assist.calc)
+(ns invoice-assist.calc)
 
 (defn- safe-sub [a b]
   (max (- a b) 0.0))
@@ -21,22 +21,28 @@
                   :else (if (> sum-a sum-b) opt-a opt-b)))
           :else
           (if (< sum-a sum-b) opt-a opt-b))))
-          
+
 (defn calc-optimal [total invoice-list]
   (cond (empty? invoice-list) nil
-        (= 0.0 (double total)) (list (apply min invoice-list))
+        (= 0.0 (double total)) nil
         :else (let [cur (first invoice-list)]
-                (select-opt total (cons cur (calc-optimal (safe-sub total cur)
-                                                          (next invoice-list)))
-                            (calc-optimal total (next invoice-list))))))
+                (if (empty? (next invoice-list))
+                  invoice-list
+                  (select-opt total
+                              (cons cur (calc-optimal (safe-sub total cur)
+                                                      (next invoice-list)))
+                            (calc-optimal total (next invoice-list)))))))
 
 
 (defn- test [total invoice-list]
   (let [opt (calc-optimal total invoice-list)]
     (cons total (cons (apply + opt) opt))))
 
+;(calc-optimal 330 '(300 400))
 
 ;; (test 0 '(1 2 3 4 5))
+;; (test 1 '(1 3))
+
 ;; (test 10.0 '(1 1 1 1 1 1 1 1 1.2 1.5))
 ;; (test 330.0 '(97 88 64 17.5 14.5 18.5 23.7 21.5 1.2 9.0))
 ;; (test 330.0 '(24.5 18.5 97 88 64.1 17.5  23.7 21.5 1.2 10.0))
