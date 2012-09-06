@@ -26,23 +26,26 @@
   (cond (empty? invoice-list) nil
         (= 0.0 (double total)) nil
         :else (let [cur (first invoice-list)]
-                (if (empty? (next invoice-list))
-                  invoice-list
-                  (select-opt total
+                (select-opt total
                               (cons cur (calc-optimal (safe-sub total cur)
                                                       (next invoice-list)))
-                            (calc-optimal total (next invoice-list)))))))
+                            (calc-optimal total (next invoice-list))))))
 
+(defn calc-inovice-combination [total invoices]
+  (let [opt (calc-optimal total invoices)]
+    (if (and (empty? opt) (not (empty? invoices)))
+      (list (apply min invoices))
+      opt)))
 
 (defn- test [total invoice-list]
-  (let [opt (calc-optimal total invoice-list)]
+  (let [opt (calc-inovice-combination total invoice-list)]
     (cons total (cons (apply + opt) opt))))
 
 ;(calc-optimal 330 '(300 400))
 
 ;; (test 0 '(1 2 3 4 5))
-;; (test 1 '(1 3))
-
+;; (test 1 '(3 9))
+;;; (test 100 '(550 230))
 ;; (test 10.0 '(1 1 1 1 1 1 1 1 1.2 1.5))
 ;; (test 330.0 '(97 88 64 17.5 14.5 18.5 23.7 21.5 1.2 9.0))
 ;; (test 330.0 '(24.5 18.5 97 88 64.1 17.5  23.7 21.5 1.2 10.0))
