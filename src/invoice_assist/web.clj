@@ -18,23 +18,29 @@
           :else "")))
 
 (defn- gen-result-page [total-str invoices-str]
-  (cond (empty? total-str) (str "<span style=\"color:red\">金额不能为空</span></br>"
-                                "<a href=\".\">重置</a>")
-        (empty? invoices-str) (str "<span style=\"color:red\">发票列表不能为空</span></br>"
-                                   "<a href=\".\">重置</a>")
-        :else (let [total (Double/parseDouble total-str)
-                    invoices (map #(Double/parseDouble %) (clojure.string/split invoices-str #"\s+"))]
-                (let [[opt sub-opt] (calc-inovice-combination total invoices)
-                      opt-sum (float (apply + opt))]
-                  (str "<pre>"
-                       (format "期望金额: %.2f</br>" total)
-                       (if sub-opt
-                         (format "最优组合: %.2f%s [%s]</br>次优组合: %.2f%s [%s]</br>"
-                                 opt-sum (diff-value-str opt-sum total) (clojure.string/join ", " opt)
-                                 (+ sub-opt opt-sum) (diff-value-str (+ sub-opt opt-sum) total) (clojure.string/join ", " (cons sub-opt opt)))
-                         (format "最优组合: %.2f%s [%s]</br>" opt-sum (diff-value-str opt-sum total) (clojure.string/join ", " opt)))
-                       "</pre>"
-                       "<pre><a href=\".\">重置</a></pre>")))))
+  (try (cond (empty? total-str) (str "<span style=\"color:red\">金额不能为空</span></br>"
+                                     "<a href=\".\">重置</a>")
+             (empty? invoices-str) (str "<span style=\"color:red\">发票列表不能为空</span></br>"
+                                        "<a href=\".\">重置</a>")
+             :else (let [total (Double/parseDouble total-str)
+                         invoices (map #(Double/parseDouble %) (clojure.string/split (clojure.string/trim invoices-str) #"\s+"))]
+                     (let [[opt sub-opt] (calc-inovice-combination total invoices)
+                           opt-sum (float (apply + opt))]
+                       (str "<pre>"
+                            (format "期望金额: %.2f</br>" total)
+                            (if sub-opt
+                              (format "最优组合: %.2f%s [%s]</br>次优组合: %.2f%s [%s]</br>"
+                                      opt-sum (diff-value-str opt-sum total) (clojure.string/join ", " opt)
+                                      (+ sub-opt opt-sum) (diff-value-str (+ sub-opt opt-sum) total) (clojure.string/join ", " (cons sub-opt opt)))
+                              (format "最优组合: %.2f%s [%s]</br>" opt-sum (diff-value-str opt-sum total) (clojure.string/join ", " opt)))
+                            "</pre>"
+                            "<pre><a href=\".\">重置</a></pre>"))))
+       (catch Exception e
+         (str "<pre>"
+              (format "<strong style=\"color:red\">%s</strong>" e)
+              "</pre>"
+              "<pre><a href=\".\">重置</a></pre>"))
+       (finally "<pre><a href=\".\">重置</a></pre>")))
 
 (defn *app* [{:keys [uri params]}]
   (if (empty? params)
