@@ -11,6 +11,12 @@
        "<input type=\"submit\" value=\"运气不错\" />" 
        "</form>"))
 
+(defn- diff-value-str [a b]
+  (let [diff (- a b)]
+    (cond (< diff 0.0) (format "(<span style=\"color:red\">-%.2f</span>)" (Math/abs diff))
+          (< 0.0 diff) (format "(<span style=\"color:green\">+%.2f</span>)" diff)
+          :else "")))
+
 (defn- gen-result-page [total-str invoices-str]
   (cond (empty? total-str) (str "<span style=\"color:red\">金额不能为空</span></br>"
                                 "<a href=\".\">重置</a>")
@@ -18,9 +24,17 @@
                                    "<a href=\".\">重置</a>")
         :else (let [total (Double/parseDouble total-str)
                     invoices (map #(Double/parseDouble %) (clojure.string/split invoices-str #"\s+"))]
-                (let [opt (calc-inovice-combination total invoices)]
-                  (str (format "期望金额:  %s </br> 实际金额:   %s </br> 最佳组合:   %s </br>" total (apply + opt) (clojure.string/join "    " opt))
-                       "<a href=\".\">重置</a>")))))
+                (let [[opt sub-opt] (calc-inovice-combination total invoices)
+                      opt-sum (float (apply + opt))]
+                  (str "<pre>"
+                       (format "期望金额: %.2f</br>" total)
+                       (if sub-opt
+                         (format "最优组合: %.2f%s [%s]</br>次优组合: %.2f%s [%s]</br>"
+                                 opt-sum (diff-value-str opt-sum total) (clojure.string/join ", " opt)
+                                 (+ sub-opt opt-sum) (diff-value-str (+ sub-opt opt-sum) total) (clojure.string/join ", " (cons sub-opt opt)))
+                         (format "最优组合: %.2f%s [%s]</br>" opt-sum (diff-value-str opt-sum total) (clojure.string/join ", " opt)))
+                       "</pre>"
+                       "<pre><a href=\".\">重置</a></pre>")))))
 
 (defn *app* [{:keys [uri params]}]
   (if (empty? params)
